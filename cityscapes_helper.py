@@ -57,6 +57,8 @@ def get_label_info():
 
     labels = [
         #       name                     id    trainId   category            catId     hasInstances   ignoreInEval   color
+        Label('void', 0, 0, 'flat', 1, False, False, (0, 0, 0)),
+
         Label('road', 7, 0, 'flat', 1, False, False, (128, 64, 128)),
 
         Label('car', 26, 13, 'vehicle', 7, True, False, (0, 0, 142)),
@@ -88,7 +90,7 @@ def one_hot_it(label, label_values):
     c = np.logical_and(np.not_equal(label, label_values[0]), np.not_equal(label, label_values[1]))
     mask = np.any(c, axis=-1)
     semantic_map.append(mask)
-    for colour in label_values:
+    for colour in label_values[1:]:
         equality = np.equal(label, colour)
         class_map = np.all(equality, axis=-1)
         semantic_map.append(class_map)
@@ -162,39 +164,40 @@ def get_data():
     X_val = []
     y_val = []
 
-    print('loading_1')
+    print('Loading X_Train..')
     for sample in train_batch:
         img_path = sample
         x = load_image(img_path)
-        x = cv2.resize(x, dsize=(512, 256))
+        x = cv2.resize(x, dsize=(256, 512))
         X_train.append(x)
 
-    print('loading_2')
-
+    print('Loading Y_Train..')
     for sample in trainy_batch:
         img_path = sample
         x = load_image(img_path)
-        x = cv2.resize(x, dsize=(512, 256))
+        x = cv2.resize(x, dsize=(256, 512))
         y_train.append(x)
 
-    # for sample in val_batch:
-    #     img_path = sample
-    #     x = load_image(img_path)
-    #     x = cv2.resize(x, dsize=(1024, 512))
-    #     X_val.append(x)
-    #
-    # for sample in valy_batch:
-    #     img_path = sample
-    #     x = load_image(img_path)
-    #     x = cv2.resize(x, dsize=(1024, 512))
-    #     y_val.append(x)
+    print('Loading X_Validation..')
+    for sample in val_batch:
+        img_path = sample
+        x = load_image(img_path)
+        x = cv2.resize(x, dsize=(256, 512))
+        X_val.append(x)
 
-    return X_train, y_train
+    print('Loading Y_Validation..')
+    for sample in valy_batch:
+        img_path = sample
+        x = load_image(img_path)
+        x = cv2.resize(x, dsize=(256, 512))
+        y_val.append(x)
+
+    return X_train, y_train, X_val, y_val
 
 
 def gen_batch_function(samplesX, samplesY, label_values, batch_size=1):
     """
-    Generate function to create batches of training data
+    F function to create batches of training data
     :param data_folder: Path to folder that contains all the datasets
     :param image_shape: Tuple - Shape of image
     :return:"""
@@ -204,6 +207,9 @@ def gen_batch_function(samplesX, samplesY, label_values, batch_size=1):
     # Shuffle training data
 
     num_samples = len(samplesX)
+
+    if(batch_size==-1):
+        batch_size = num_samples
 
     # Loop through batches and grab images, yielding each batch
     for batch_i in range(0, num_samples, batch_size):
@@ -221,5 +227,4 @@ def gen_batch_function(samplesX, samplesY, label_values, batch_size=1):
 
         X_f = np.float32(X_f)
         y_f = np.float32(y_f)
-        print('generate')
         yield X_f, y_f
