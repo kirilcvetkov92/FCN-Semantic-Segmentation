@@ -5,6 +5,7 @@ import helper
 import warnings
 from distutils.version import LooseVersion
 import project_tests as tests
+import cityscapes_helper
 
 
 # Check TensorFlow Version
@@ -96,53 +97,6 @@ def layers(vgg_layer3_out, vgg_layer4_out, vgg_layer7_out, num_classes):
 tests.test_layers(layers)
 
 
-def layers_cityscapes(vgg_layer3_out, vgg_layer4_out, vgg_layer7_out, num_classes):
-    """
-    Create the layers for a fully convolutional network.  Build skip-layers using the vgg layers.
-    :param vgg_layer3_out: TF Tensor for VGG Layer 3 output
-    :param vgg_layer4_out: TF Tensor for VGG Layer 4 output
-    :param vgg_layer7_out: TF Tensor for VGG Layer 7 output
-    :param num_classes: Number of classes to classify
-    :return: The Tensor for the last layer of output
-    """
-    # TODO: Implement function
-    layer7_conv_1x1 = tf.layers.conv2d(vgg_layer7_out, num_classes, 1, 1,
-                                       padding='same', kernel_initializer= tf.random_normal_initializer(stddev=0.01),
-                                       kernel_regularizer=tf.contrib.layers.l2_regularizer(1e-3))
-
-   # layer7_conv_1x1 = tf.layers.batch_normalization(layer7_conv_1x1)
-
-    output = tf.layers.conv2d_transpose(layer7_conv_1x1, num_classes, 4, 3,
-                                        padding='same', kernel_initializer= tf.random_normal_initializer(stddev=0.01),
-                                        kernel_regularizer=tf.contrib.layers.l2_regularizer(1e-3))
-    #output = keras.layers.UpSampling2D(size=(2,2),data_format=None,interpolation='bilinear')(layer7_conv_1x1)
-
-    layer4_conv_1x1 = tf.layers.conv2d(vgg_layer4_out, num_classes, 1, 1,
-                                       padding='same', kernel_initializer= tf.random_normal_initializer(stddev=0.01),
-                                       kernel_regularizer=tf.contrib.layers.l2_regularizer(1e-3))
-    #layer4_conv_1x1 = tf.layers.batch_normalization(layer4_conv_1x1)
-
-    output = tf.add(output, layer4_conv_1x1)
-   # output = tf.layers.batch_normalization(output)
-
-    #output = keras.layers.UpSampling2D(size=(2,2),data_format=None,interpolation='bilinear')(output)
-
-
-    output = tf.layers.conv2d_transpose(output, num_classes, 4, 3,
-                                       padding='same', kernel_initializer= tf.random_normal_initializer(stddev=0.01),
-                                        kernel_regularizer=tf.contrib.layers.l2_regularizer(1e-3))
-    layer3_conv_1x1 = tf.layers.conv2d(vgg_layer3_out, num_classes, 1, 1,
-                                       padding='same', kernel_initializer= tf.random_normal_initializer(stddev=0.01),
-                                       kernel_regularizer=tf.contrib.layers.l2_regularizer(1e-3))
-    output = tf.add(output, layer3_conv_1x1)
-  #  output = tf.layers.batch_normalization(output)
-
-    #output = keras.layers.UpSampling2D(size=(8,8),data_format=None,interpolation='bilinear')(output)
-    output = tf.layers.conv2d_transpose(output, num_classes, 16, 8,
-                                        padding='same', kernel_initializer= tf.random_normal_initializer(stddev=0.01),
-                                        kernel_regularizer=tf.contrib.layers.l2_regularizer(1e-3))
-
-    return output
 
 def optimize(nn_last_layer, correct_label, learning_rate, num_classes):
     """
@@ -211,10 +165,13 @@ def train_nn(sess, epochs, batch_size, get_batches_fn, train_op, cross_entropy_l
     data_dir = './data'
     runs_dir = './runs'
 
+    class_names, label_values = cityscapes_helper.get_label_info()
+    X_train, y_train, X_val, y_val = cityscapes_helper.get_data()
+
     # TODO: Implement function
     # TODO: Implement function
     for epoch in range(epochs):
-        for image, targets in get_batches_fn(batch_size):
+        for image, targets in get_batches_fn(X_train, y_train, X_val, y_val, label_values, batch_size):
             _, loss = sess.run([train_op, cross_entropy_loss],
                                feed_dict={input_image: image, correct_label: targets, keep_prob: 0.5,
                                           learning_rate: 0.001})
@@ -227,9 +184,8 @@ def train_nn(sess, epochs, batch_size, get_batches_fn, train_op, cross_entropy_l
 
 tests.test_train_nn(train_nn)
 
-
 def run():
-    num_classes = 2
+    num_classes = 3
     image_shape = (160, 576)  # KITTI dataset uses 160x576 images
     data_dir = './data'
     runs_dir = './runs'
@@ -250,13 +206,13 @@ def run():
         # Path to vgg model
         vgg_path = os.path.join(data_dir, 'vgg')
         # Create function to get batches
-        get_batches_fn = helper.gen_batch_function(os.path.join(data_dir, 'data_road/training'), image_shape)
+        get_batches_fn = cityscapes_helper.gen_batch_function
 
         input, keep_prob, layer3, layer4, layer7 = load_vgg(sess, vgg_path)
-        output = layers(layer3, layer4, layer7, 2)
-        correct_label = tf.placeholder(dtype=tf.float32, shape=(None, None, None, 2))
+        output = layers_cityscapes(layer3, layer4, layer7, num_classes)
+        correct_label = tf.placeholder(dtype=tf.float32, shape=(None, None, None, num_classes))
         learning_rate = tf.placeholder(dtype=tf.float32)
-        logits, train_op, cross_entropy_loss = optimize(output, correct_label, learning_rate, 2)
+        logits, train_op, cross_entropy_loss = optimize(output, correct_label, learning_rate, num_classes)
         tf.set_random_seed(123)
         sess.run(tf.global_variables_initializer())
         saver = tf.train.Saver()  # Simple model saver

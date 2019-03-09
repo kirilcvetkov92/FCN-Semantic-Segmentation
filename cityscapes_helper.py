@@ -8,6 +8,7 @@ import os
 from glob import glob
 from sklearn.utils import shuffle
 
+
 def get_label_info():
     """
     Retrieve the class names and label values for the selected dataset.
@@ -131,30 +132,17 @@ def colour_code_segmentation(image, label_values):
     return x
 
 
-def get_label_values():
-    class_names_list, label_values = get_label_info("data/class_dict.csv")
-    class_names_string = ""
-    for class_name in class_names_list:
-        if not class_name == class_names_list[-1]:
-            class_names_string = class_names_string + class_name + ", "
-        else:
-            class_names_string = class_names_string + class_name
+def load_image(path):
+    image = cv2.cvtColor(cv2.imread(path, -1), cv2.COLOR_BGR2RGB)
+    return image
 
-    num_classes = len(label_values)
-
-    return label_values, class_names_list, num_classes
-
-
- def load_image(path):
-        image = cv2.cvtColor(cv2.imread(path, -1), cv2.COLOR_BGR2RGB)
-        return image
 
 def load_annotation(path):
     image = cv2.imread(path, -1)
     return image
 
-def get_data():
 
+def get_data():
     PATH = 'D:/data/leftImg8bit_trainvaltest/'
     train_path = PATH + '/leftImg8bit/train/'
     trainy_path = PATH + '/sky-data/train/'
@@ -200,6 +188,7 @@ def get_data():
 
     return X_train, y_train, X_val, y_val
 
+
 def gen_batch_function(samplesX, samplesY, label_values, batch_size=1):
     """
     Generate function to create batches of training data
@@ -230,4 +219,3 @@ def gen_batch_function(samplesX, samplesY, label_values, batch_size=1):
         X_f = np.float32(X_f)
         y_f = np.float32(y_f)
         yield ([X_f, X_f], y_f)
-
