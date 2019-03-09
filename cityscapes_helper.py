@@ -85,7 +85,7 @@ def one_hot_it(label, label_values):
     """
 
     semantic_map = []
-    c = np.logical_and(np.not_equal(t, label_values[0]), np.not_equal(t, label_values[1]))
+    c = np.logical_and(np.not_equal(label, label_values[0]), np.not_equal(label, label_values[1]))
     mask = np.any(c, axis=-1)
     semantic_map.append(mask)
     for colour in label_values:
@@ -162,31 +162,34 @@ def get_data():
     X_val = []
     y_val = []
 
+    print('loading_1')
     for sample in train_batch:
         img_path = sample
         x = load_image(img_path)
-        x = cv2.resize(x, dsize=(1024, 512))
+        x = cv2.resize(x, dsize=(512, 256))
         X_train.append(x)
+
+    print('loading_2')
 
     for sample in trainy_batch:
         img_path = sample
         x = load_image(img_path)
-        x = cv2.resize(x, dsize=(1024, 512))
+        x = cv2.resize(x, dsize=(512, 256))
         y_train.append(x)
 
-    for sample in val_batch:
-        img_path = sample
-        x = load_image(img_path)
-        x = cv2.resize(x, dsize=(1024, 512))
-        X_val.append(x)
+    # for sample in val_batch:
+    #     img_path = sample
+    #     x = load_image(img_path)
+    #     x = cv2.resize(x, dsize=(1024, 512))
+    #     X_val.append(x)
+    #
+    # for sample in valy_batch:
+    #     img_path = sample
+    #     x = load_image(img_path)
+    #     x = cv2.resize(x, dsize=(1024, 512))
+    #     y_val.append(x)
 
-    for sample in valy_batch:
-        img_path = sample
-        x = load_image(img_path)
-        x = cv2.resize(x, dsize=(1024, 512))
-        y_val.append(x)
-
-    return X_train, y_train, X_val, y_val
+    return X_train, y_train
 
 
 def gen_batch_function(samplesX, samplesY, label_values, batch_size=1):
@@ -203,7 +206,7 @@ def gen_batch_function(samplesX, samplesY, label_values, batch_size=1):
     num_samples = len(samplesX)
 
     # Loop through batches and grab images, yielding each batch
-    for batch_i in range(0, len(num_samples), batch_size):
+    for batch_i in range(0, num_samples, batch_size):
 
         X_train = samplesX[batch_i:batch_i + batch_size]
         y_train = samplesY[batch_i:batch_i + batch_size]
@@ -218,4 +221,5 @@ def gen_batch_function(samplesX, samplesY, label_values, batch_size=1):
 
         X_f = np.float32(X_f)
         y_f = np.float32(y_f)
-        yield ([X_f, X_f], y_f)
+        print('generate')
+        yield X_f, y_f

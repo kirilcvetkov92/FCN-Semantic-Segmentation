@@ -161,17 +161,45 @@ def train_nn(sess, epochs, batch_size, get_batches_fn, train_op, cross_entropy_l
     :param keep_prob: TF Placeholder for dropout keep probability
     :param learning_rate: TF Placeholder for learning rate
     """
+    # TODO: Implement function
+    # TODO: Implement function
+    for epoch in range(epochs):
+        for image, targets in get_batches_fn(batch_size):
+            _, loss = sess.run([train_op, cross_entropy_loss],
+                               feed_dict={input_image: image, correct_label: targets, keep_prob: 0.5,
+                                          learning_rate: 0.001})
+        # Print data on the learning process
+        print("Epoch: {}".format(epoch + 1), "/ {}".format(epochs), " Loss: {:.3f}".format(loss))
+
+tests.test_train_nn(train_nn)
+
+def train_nn_sky(sess, epochs, batch_size, get_batches_fn, train_op, cross_entropy_loss, input_image,
+             correct_label, keep_prob, learning_rate):
+    """
+    Train neural network and print out the loss during training.
+    :param sess: TF Session
+    :param epochs: Number of epochs
+    :param batch_size: Batch size
+    :param get_batches_fn: Function to get batches of training data.  Call using get_batches_fn(batch_size)
+    :param train_op: TF Operation to train the neural network
+    :param cross_entropy_loss: TF Tensor for the amount of loss
+    :param input_image: TF Placeholder for input images
+    :param correct_label: TF Placeholder for label images
+    :param keep_prob: TF Placeholder for dropout keep probability
+    :param learning_rate: TF Placeholder for learning rate
+    """
     image_shape = (160, 576)  # KITTI dataset uses 160x576 images
     data_dir = './data'
     runs_dir = './runs'
 
     class_names, label_values = cityscapes_helper.get_label_info()
-    X_train, y_train, X_val, y_val = cityscapes_helper.get_data()
+    X_train, y_train = cityscapes_helper.get_data()
 
     # TODO: Implement function
     # TODO: Implement function
     for epoch in range(epochs):
-        for image, targets in get_batches_fn(X_train, y_train, X_val, y_val, label_values, batch_size):
+        print('epoch : ', epoch)
+        for image, targets in get_batches_fn(X_train, y_train, label_values, batch_size):
             _, loss = sess.run([train_op, cross_entropy_loss],
                                feed_dict={input_image: image, correct_label: targets, keep_prob: 0.5,
                                           learning_rate: 0.001})
@@ -182,9 +210,10 @@ def train_nn(sess, epochs, batch_size, get_batches_fn, train_op, cross_entropy_l
         # validate_nn(sess, epochs, 1, get_batches_fn_valid, train_op, cross_entropy_loss, input, correct_label,
         #             keep_prob, learning_rate)
 
-tests.test_train_nn(train_nn)
 
 def run():
+    print('run1')
+
     num_classes = 3
     image_shape = (160, 576)  # KITTI dataset uses 160x576 images
     data_dir = './data'
@@ -200,7 +229,7 @@ def run():
     #  https://www.cityscapes-dataset.com/
 
     #gpu_options = tf.GPUOptions(per_process_gpu_memory_fraction=0.333)
-
+    print('run')
     with tf.Session(config=tf.ConfigProto()) as sess:
 
         # Path to vgg model
@@ -209,7 +238,7 @@ def run():
         get_batches_fn = cityscapes_helper.gen_batch_function
 
         input, keep_prob, layer3, layer4, layer7 = load_vgg(sess, vgg_path)
-        output = layers_cityscapes(layer3, layer4, layer7, num_classes)
+        output = layers(layer3, layer4, layer7, num_classes)
         correct_label = tf.placeholder(dtype=tf.float32, shape=(None, None, None, num_classes))
         learning_rate = tf.placeholder(dtype=tf.float32)
         logits, train_op, cross_entropy_loss = optimize(output, correct_label, learning_rate, num_classes)
@@ -217,8 +246,7 @@ def run():
         sess.run(tf.global_variables_initializer())
         saver = tf.train.Saver()  # Simple model saver
 
-
-        train_nn(sess, epochs, batch_size, get_batches_fn, train_op, cross_entropy_loss, input, correct_label,
+        train_nn_sky(sess, epochs, batch_size, get_batches_fn, train_op, cross_entropy_loss, input, correct_label,
                  keep_prob, learning_rate)
 
         # Save inference data using helper.save_inference_samples
