@@ -57,17 +57,25 @@ def layers(vgg_layer3_out, vgg_layer4_out, vgg_layer7_out, num_classes):
     """
     # TODO: Implement function
     layer7_conv_1x1 = tf.layers.conv2d(vgg_layer7_out, num_classes, 1, 1,
-                                       padding='same',  kernel_initializer= tf.random_normal_initializer(stddev=0.01),
-
+                                       padding='same', kernel_initializer= tf.random_normal_initializer(stddev=0.01),
                                        kernel_regularizer=tf.contrib.layers.l2_regularizer(1e-3))
+
+   # layer7_conv_1x1 = tf.layers.batch_normalization(layer7_conv_1x1)
+
     output = tf.layers.conv2d_transpose(layer7_conv_1x1, num_classes, 4, 2,
                                         padding='same', kernel_initializer= tf.random_normal_initializer(stddev=0.01),
                                         kernel_regularizer=tf.contrib.layers.l2_regularizer(1e-3))
+    #output = keras.layers.UpSampling2D(size=(2,2),data_format=None,interpolation='bilinear')(layer7_conv_1x1)
+
     layer4_conv_1x1 = tf.layers.conv2d(vgg_layer4_out, num_classes, 1, 1,
                                        padding='same', kernel_initializer= tf.random_normal_initializer(stddev=0.01),
                                        kernel_regularizer=tf.contrib.layers.l2_regularizer(1e-3))
+    #layer4_conv_1x1 = tf.layers.batch_normalization(layer4_conv_1x1)
+
     output = tf.add(output, layer4_conv_1x1)
-    #output = keras.layers.UpSampling2D(size=(2,2),     data_format=None,interpolation='bilinear')(output)
+   # output = tf.layers.batch_normalization(output)
+
+    #output = keras.layers.UpSampling2D(size=(2,2),data_format=None,interpolation='bilinear')(output)
 
 
     output = tf.layers.conv2d_transpose(output, num_classes, 4, 2,
@@ -77,12 +85,64 @@ def layers(vgg_layer3_out, vgg_layer4_out, vgg_layer7_out, num_classes):
                                        padding='same', kernel_initializer= tf.random_normal_initializer(stddev=0.01),
                                        kernel_regularizer=tf.contrib.layers.l2_regularizer(1e-3))
     output = tf.add(output, layer3_conv_1x1)
+  #  output = tf.layers.batch_normalization(output)
+
+    #output = keras.layers.UpSampling2D(size=(8,8),data_format=None,interpolation='bilinear')(output)
     output = tf.layers.conv2d_transpose(output, num_classes, 16, 8,
                                         padding='same', kernel_initializer= tf.random_normal_initializer(stddev=0.01),
                                         kernel_regularizer=tf.contrib.layers.l2_regularizer(1e-3))
+
     return output
 tests.test_layers(layers)
 
+
+def layers_cityscapes(vgg_layer3_out, vgg_layer4_out, vgg_layer7_out, num_classes):
+    """
+    Create the layers for a fully convolutional network.  Build skip-layers using the vgg layers.
+    :param vgg_layer3_out: TF Tensor for VGG Layer 3 output
+    :param vgg_layer4_out: TF Tensor for VGG Layer 4 output
+    :param vgg_layer7_out: TF Tensor for VGG Layer 7 output
+    :param num_classes: Number of classes to classify
+    :return: The Tensor for the last layer of output
+    """
+    # TODO: Implement function
+    layer7_conv_1x1 = tf.layers.conv2d(vgg_layer7_out, num_classes, 1, 1,
+                                       padding='same', kernel_initializer= tf.random_normal_initializer(stddev=0.01),
+                                       kernel_regularizer=tf.contrib.layers.l2_regularizer(1e-3))
+
+   # layer7_conv_1x1 = tf.layers.batch_normalization(layer7_conv_1x1)
+
+    output = tf.layers.conv2d_transpose(layer7_conv_1x1, num_classes, 4, 3,
+                                        padding='same', kernel_initializer= tf.random_normal_initializer(stddev=0.01),
+                                        kernel_regularizer=tf.contrib.layers.l2_regularizer(1e-3))
+    #output = keras.layers.UpSampling2D(size=(2,2),data_format=None,interpolation='bilinear')(layer7_conv_1x1)
+
+    layer4_conv_1x1 = tf.layers.conv2d(vgg_layer4_out, num_classes, 1, 1,
+                                       padding='same', kernel_initializer= tf.random_normal_initializer(stddev=0.01),
+                                       kernel_regularizer=tf.contrib.layers.l2_regularizer(1e-3))
+    #layer4_conv_1x1 = tf.layers.batch_normalization(layer4_conv_1x1)
+
+    output = tf.add(output, layer4_conv_1x1)
+   # output = tf.layers.batch_normalization(output)
+
+    #output = keras.layers.UpSampling2D(size=(2,2),data_format=None,interpolation='bilinear')(output)
+
+
+    output = tf.layers.conv2d_transpose(output, num_classes, 4, 3,
+                                       padding='same', kernel_initializer= tf.random_normal_initializer(stddev=0.01),
+                                        kernel_regularizer=tf.contrib.layers.l2_regularizer(1e-3))
+    layer3_conv_1x1 = tf.layers.conv2d(vgg_layer3_out, num_classes, 1, 1,
+                                       padding='same', kernel_initializer= tf.random_normal_initializer(stddev=0.01),
+                                       kernel_regularizer=tf.contrib.layers.l2_regularizer(1e-3))
+    output = tf.add(output, layer3_conv_1x1)
+  #  output = tf.layers.batch_normalization(output)
+
+    #output = keras.layers.UpSampling2D(size=(8,8),data_format=None,interpolation='bilinear')(output)
+    output = tf.layers.conv2d_transpose(output, num_classes, 16, 8,
+                                        padding='same', kernel_initializer= tf.random_normal_initializer(stddev=0.01),
+                                        kernel_regularizer=tf.contrib.layers.l2_regularizer(1e-3))
+
+    return output
 
 def optimize(nn_last_layer, correct_label, learning_rate, num_classes):
     """
@@ -103,8 +163,9 @@ def optimize(nn_last_layer, correct_label, learning_rate, num_classes):
 
 tests.test_optimize(optimize)
 
-import time
-def train_nn(sess, epochs, batch_size, get_batches_fn, train_op, cross_entropy_loss, input_image,
+
+
+def validate_nn(sess, epochs, batch_size, get_batches_fn, train_op, cross_entropy_loss, input_image,
              correct_label, keep_prob, learning_rate):
     """
     Train neural network and print out the loss during training.
@@ -121,13 +182,48 @@ def train_nn(sess, epochs, batch_size, get_batches_fn, train_op, cross_entropy_l
     """
     # TODO: Implement function
     # TODO: Implement function
+    for image, targets in get_batches_fn(batch_size):
+        _, loss = sess.run([cross_entropy_loss],
+                           feed_dict={input_image: image, correct_label: targets, keep_prob: 0.5,
+                                      learning_rate: 0.001})
+    # Print data on the learning process
+    print("Validation: {}  Loss: {:.3f}".format(loss))
+
+
+
+import time
+def train_nn(sess, epochs, batch_size, get_batches_fn, train_op, cross_entropy_loss, input_image,
+             correct_label, keep_prob, learning_rate):
+    """
+    Train neural network and print out the loss during training.
+    :param sess: TF Session
+    :param epochs: Number of epochs
+    :param batch_size: Batch size
+    :param get_batches_fn: Function to get batches of training data.  Call using get_batches_fn(batch_size)
+    :param train_op: TF Operation to train the neural network
+    :param cross_entropy_loss: TF Tensor for the amount of loss
+    :param input_image: TF Placeholder for input images
+    :param correct_label: TF Placeholder for label images
+    :param keep_prob: TF Placeholder for dropout keep probability
+    :param learning_rate: TF Placeholder for learning rate
+    """
+    image_shape = (160, 576)  # KITTI dataset uses 160x576 images
+    data_dir = './data'
+    runs_dir = './runs'
+
+    # TODO: Implement function
+    # TODO: Implement function
     for epoch in range(epochs):
         for image, targets in get_batches_fn(batch_size):
             _, loss = sess.run([train_op, cross_entropy_loss],
                                feed_dict={input_image: image, correct_label: targets, keep_prob: 0.5,
                                           learning_rate: 0.001})
         # Print data on the learning process
-        print("Epoch: {}".format(epoch + 1), "/ {}".format(epochs), " Loss: {:.3f}".format(loss))
+
+            print("Epoch: {}".format(epoch + 1), "/ {}".format(epochs), " Loss: {:.3f}".format(loss))
+
+        # validate_nn(sess, epochs, 1, get_batches_fn_valid, train_op, cross_entropy_loss, input, correct_label,
+        #             keep_prob, learning_rate)
 
 tests.test_train_nn(train_nn)
 
@@ -139,7 +235,7 @@ def run():
     runs_dir = './runs'
     tests.test_for_kitti_dataset(data_dir)
     epochs = 100
-    batch_size = 10
+    batch_size = 20
     # Download pretrained vgg model
     helper.maybe_download_pretrained_vgg(data_dir)
 
@@ -147,7 +243,10 @@ def run():
     # You'll need a GPU with at least 10 teraFLOPS to train on.
     #  https://www.cityscapes-dataset.com/
 
-    with tf.Session() as sess:
+    #gpu_options = tf.GPUOptions(per_process_gpu_memory_fraction=0.333)
+
+    with tf.Session(config=tf.ConfigProto()) as sess:
+
         # Path to vgg model
         vgg_path = os.path.join(data_dir, 'vgg')
         # Create function to get batches
@@ -165,6 +264,7 @@ def run():
 
         train_nn(sess, epochs, batch_size, get_batches_fn, train_op, cross_entropy_loss, input, correct_label,
                  keep_prob, learning_rate)
+
         # Save inference data using helper.save_inference_samples
         helper.save_inference_samples(runs_dir, data_dir, sess, image_shape, logits, keep_prob, input)
         # OPTIONAL: Augment Images for better results
