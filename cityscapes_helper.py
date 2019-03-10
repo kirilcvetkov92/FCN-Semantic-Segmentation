@@ -167,28 +167,28 @@ def get_data():
     for sample in train_batch:
         img_path = sample
         x = load_image(img_path)
-        x = cv2.resize(x, dsize=(256, 512))
+        x = cv2.resize(x, dsize=(512, 256))
         X_train.append(x)
 
     print('Loading Y_Train..')
     for sample in trainy_batch:
         img_path = sample
         x = load_image(img_path)
-        x = cv2.resize(x, dsize=(256, 512))
+        x = cv2.resize(x, dsize=(512, 256))
         y_train.append(x)
 
     print('Loading X_Validation..')
     for sample in val_batch:
         img_path = sample
         x = load_image(img_path)
-        x = cv2.resize(x, dsize=(256, 512))
+        x = cv2.resize(x, dsize=(512, 256))
         X_val.append(x)
 
     print('Loading Y_Validation..')
     for sample in valy_batch:
         img_path = sample
         x = load_image(img_path)
-        x = cv2.resize(x, dsize=(256, 512))
+        x = cv2.resize(x, dsize=(512, 256))
         y_val.append(x)
 
     return X_train, y_train, X_val, y_val
@@ -219,28 +219,67 @@ def random_crop(image, label, crop_height, crop_width):
     else:
         raise Exception('Crop shape (%d, %d) exceeds image dimensions (%d, %d)!' % (
         crop_height, crop_width, image.shape[0], image.shape[1]))
-    
+
+
+
+def random_shadow(image):
+    """
+    Generates and adds random shadow
+    """
+    rand_width_scal_1 =  np.random.rand()
+    IMAGE_WIDTH, IMAGE_HEIGHT = image.shape
+    x1, y1 = IMAGE_WIDTH *  rand_width_scal_1, 0
+    rand_width_scal_2 =  np.random.rand()
+    x2, y2 = IMAGE_WIDTH * rand_width_scal_2, IMAGE_HEIGHT
+    xn, yn = np.mgrid[0:IMAGE_HEIGHT, 0:IMAGE_WIDTH]
+    mask = np.zeros_like(image[:, :, 1])
+    mask[(yn - y1) * (x2 - x1) - (y2 - y1) * (xn - x1) > 0] = 1
+
+    cond = mask == np.random.randint(2)
+    s_ratio = np.random.uniform(low=0.2, high=0.5)
+
+    hls = cv2.cvtColor(image, cv2.COLOR_RGB2HLS)
+    hls[:, :, 1][cond] = hls[:, :, 1][cond] * s_ratio
+    return cv2.cvtColor(hls, cv2.COLOR_HLS2RGB)
+
+
+def random_brightness(image):
+    """
+    Randomly adjust brightness of the image.
+    HSV (Hue, Saturation, Value) is also called HSB ('B' for Brightness).
+    """
+
+    hsv_channel = cv2.cvtColor(image, cv2.COLOR_RGB2HSV)
+    brightness_scalar = np.random.rand()
+    ratio = 1.0 + 0.4 * (brightness_scalar - 0.5)
+    hsv_channel[:,:,2] =  hsv_channel[:,:,2] * ratio
+    return cv2.cvtColor(hsv_channel, cv2.COLOR_HSV2RGB)
+
+
+def bc_img(img, s = 1.0, m = 0.0):
+    img = img.astype(np.int)
+    img = img * s + m
+    img[img > 255] = 255
+    img[img < 0] = 0
+    img = img.astype(np.uint8)
+    return img
+
+
 def data_augmentation(input_image, output_image):
     # Data augmentation
+    # try:
+    #     random_crop(image, label, 320, 240)
+    # except:
+    #     pass
     # go here
-    if random.randint(0,1):
-        input_image = cv2.flip(input_image, 1)
-        output_image = cv2.flip(output_image, 1)
-    if  random.randint(0,1):
-        input_image = cv2.flip(input_image, 0)
-        output_image = cv2.flip(output_image, 0)
-
-    #brightness
-    if random.randint(0,1):
-        factor = 1.0 + random.uniform(-1.0*0.5, 0.5)
-        table = np.array([((i / 255.0) * factor) * 255 for i in np.arange(0, 256)]).astype(np.uint8)
-        input_image = cv2.LUT(input_image, table)
-
-    if  random.randint(0,1):
-        angle = random.uniform(-1*45, 45)
-        M = cv2.getRotationMatrix2D((input_image.shape[1]//2, input_image.shape[0]//2), angle, 1.0)
-        input_image = cv2.warpAffine(input_image, M, (input_image.shape[1], input_image.shape[0]), flags=cv2.INTER_NEAREST)
-        output_image = cv2.warpAffine(output_image, M, (output_image.shape[1], output_image.shape[0]), flags=cv2.INTER_NEAREST)
+    t = random.uniform(0.85, 1.15)  # Contrast augmentation
+    c = random.randint(-40, 30)  # Brightness augmentation
+    input_image = bc_img(input_image, t, c)
+    # if  random.randint(0,1):
+    #     angle = random.uniform(-1*45, 45)
+    #     M = cv2.getRotationMatrix2D((input_image.shape[1]//2, input_image.shape[0]//2), angle, 1.0)
+    #     input_image = cv2.warpAffine(input_image, M, (input_image.shape[1], input_image.shape[0]), flags=cv2.INTER_NEAREST)
+    #     output_image = cv2.warpAffine(output_image, M, (output_image.shape[1], output_image.shape[0]), flags=cv2.INTER_NEAREST)
 
     return input_image, output_image
 
