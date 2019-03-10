@@ -7,7 +7,7 @@ import scipy.misc
 import os
 from glob import glob
 from sklearn.utils import shuffle
-
+import random
 
 def get_label_info():
     """
@@ -57,7 +57,6 @@ def get_label_info():
 
     labels = [
         #       name                     id    trainId   category            catId     hasInstances   ignoreInEval   color
-        Label('void', 0, 0, 'flat', 1, False, False, (0, 0, 0)),
 
         Label('road', 7, 0, 'flat', 1, False, False, (128, 64, 128)),
 
@@ -90,7 +89,7 @@ def one_hot_it(label, label_values):
     c = np.logical_and(np.not_equal(label, label_values[0]), np.not_equal(label, label_values[1]))
     mask = np.any(c, axis=-1)
     semantic_map.append(mask)
-    for colour in label_values[1:]:
+    for colour in label_values:
         equality = np.equal(label, colour)
         class_map = np.all(equality, axis=-1)
         semantic_map.append(class_map)
@@ -195,7 +194,41 @@ def get_data():
     return X_train, y_train, X_val, y_val
 
 
-def gen_batch_function(samplesX, samplesY, label_values, batch_size=1):
+
+
+def flip_image(image, measurement, flip_probability=1.0):
+    if random.random() <= flip_probability:
+        image = cv2.flip(image, 1)
+        measurement*=-1
+    return image, measurement
+
+
+def data_augmentation(input_image, output_image):
+    # Data augmentation
+    # go here
+    if random.randint(0,1):
+        input_image = cv2.flip(input_image, 1)
+        output_image = cv2.flip(output_image, 1)
+    if  random.randint(0,1):
+        input_image = cv2.flip(input_image, 0)
+        output_image = cv2.flip(output_image, 0)
+
+    #brightness
+    if random.randint(0,1):
+        factor = 1.0 + random.uniform(-1.0*0.5, 0.5)
+        table = np.array([((i / 255.0) * factor) * 255 for i in np.arange(0, 256)]).astype(np.uint8)
+        input_image = cv2.LUT(input_image, table)
+
+    if  random.randint(0,1):
+        angle = random.uniform(-1*45, 45)
+        M = cv2.getRotationMatrix2D((input_image.shape[1]//2, input_image.shape[0]//2), angle, 1.0)
+        input_image = cv2.warpAffine(input_image, M, (input_image.shape[1], input_image.shape[0]), flags=cv2.INTER_NEAREST)
+        output_image = cv2.warpAffine(output_image, M, (output_image.shape[1], output_image.shape[0]), flags=cv2.INTER_NEAREST)
+
+    return input_image, output_image
+
+
+def gen_batch_function(samplesX, samplesY, label_values, batch_size=1, is_train=True):
     """
     F function to create batches of training data
     :param data_folder: Path to folder that contains all the datasets
@@ -221,7 +254,11 @@ def gen_batch_function(samplesX, samplesY, label_values, batch_size=1):
         X_f = []
         y_f = []
         for x, y in zip(X_train, y_train):
+            if is_train:
+                x, y = data_augmentation(x, y)
+
             y = np.float32(one_hot_it(y, label_values=label_values))
+
             X_f.append(x)
             y_f.append(y)
 
