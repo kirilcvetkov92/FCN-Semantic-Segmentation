@@ -33,9 +33,9 @@ def _prevent_print(function, params):
     :param function: The function in which to repress any prints to the terminal
     :param params: Parameters to feed into function
     """
-    sys.stdout = open(os.devnull, "w")
+    #sys.stdout = open(os.devnull, "w")
     function(**params)
-    sys.stdout = sys.__stdout__
+   # sys.stdout = sys.__stdout__
 
 
 def _assert_tensor_shape(tensor, shape, display_name):
@@ -74,6 +74,8 @@ class TmpMock(object):
 
 @test_safe
 def test_load_vgg(load_vgg, tf_module):
+    print('test_5')
+
     """
     Test whether `load_vgg()` is correctly implemented, based on layers 3, 4 and 7.
     :param load_vgg: A function to load vgg layers 3, 4 and 7.
@@ -100,10 +102,13 @@ def test_load_vgg(load_vgg, tf_module):
         assert vgg_layer3_out == test_vgg_layer3_out, 'layer3_out is the wrong object'
         assert vgg_layer4_out == test_vgg_layer4_out, 'layer4_out is the wrong object'
         assert vgg_layer7_out == test_vgg_layer7_out, 'layer7_out is the wrong object'
+    print('test_5')
 
 
 @test_safe
 def test_layers(layers):
+    print('test_4')
+
     """
     Test whether `layers()` function is correctly implemented.
     param: layers: An implemented `layers()` function with deconvolutional layers in a FCN.
@@ -115,10 +120,13 @@ def test_layers(layers):
     layers_output = layers(vgg_layer3_out, vgg_layer4_out, vgg_layer7_out, num_classes)
 
     _assert_tensor_shape(layers_output, [None, None, None, num_classes], 'Layers Output')
+    print('test_4')
 
 
 @test_safe
 def test_optimize(optimize):
+    print('test_3')
+
     """
     Test whether the `optimize()` function correctly creates logits and the training optimizer.
     If the optimize is not set correctly, training will fail to update weights.
@@ -139,10 +147,13 @@ def test_optimize(optimize):
         test, loss = sess.run([layers_output, cross_entropy_loss], {correct_label: np.arange(np.prod(shape)).reshape(shape)})
 
     assert test.min() != 0 or test.max() != 0, 'Training operation not changing weights.'
+    print('test_3')
 
 
 @test_safe
 def test_train_nn(train_nn):
+    print('test_2')
+
     """
     Test whether the `train_nn()` function correctly begins training a neural network on simple data.
     :param train_nn: An implemented `train_nn()` function.
@@ -154,12 +165,14 @@ def test_train_nn(train_nn):
         shape = [batch_size_param, 2, 3, 3]
         return np.arange(np.prod(shape)).reshape(shape)
 
+    print('test_2_1')
     train_op = tf.constant(0)
     cross_entropy_loss = tf.constant(10.11)
     input_image = tf.placeholder(tf.float32, name='input_image')
     correct_label = tf.placeholder(tf.float32, name='correct_label')
     keep_prob = tf.placeholder(tf.float32, name='keep_prob')
     learning_rate = tf.placeholder(tf.float32, name='learning_rate')
+    print('test_2_2')
     with tf.Session() as sess:
         parameters = {
             'sess': sess,
@@ -173,10 +186,12 @@ def test_train_nn(train_nn):
             'keep_prob': keep_prob,
             'learning_rate': learning_rate}
         _prevent_print(train_nn, parameters)
+    print('test_2')
 
 
 @test_safe
 def test_for_kitti_dataset(data_dir):
+    print('test_1')
     """
     Test whether the KITTI dataset has been downloaded, and whether the full, correct dataset is present.
     :param data_dir: Directory where the KITTI dataset was downloaded into.
@@ -191,3 +206,4 @@ def test_for_kitti_dataset(data_dir):
     assert training_images_count == 289, 'Expected 289 training images, found {} images.'.format(training_images_count)
     assert training_labels_count == 289, 'Expected 289 training labels, found {} labels.'.format(training_labels_count)
     assert testing_images_count == 290, 'Expected 290 testing images, found {} images.'.format(testing_images_count)
+    print('test_1')
