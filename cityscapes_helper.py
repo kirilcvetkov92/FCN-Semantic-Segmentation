@@ -96,16 +96,61 @@ def get_label_info():
         Label('license plate', -1, -1, 'vehicle', 7, False, True, (0, 0, 142)),
     ]
 
+    seen = set()
+    label_list = list(map(lambda x : x[7], labels))
+    label_values = [x for x in label_list if not (x in seen or seen.add(x))]
 
-    class_names = []
-    label_values = list(set(map(lambda x: x[7], labels)))
+    return label_values
 
-    for label in label_values:
-        class_names.append(label[0])
-        label_values.append(label[1])
+def get_data():
+    PATH = 'D:/data/leftImg8bit_trainvaltest/'
+    train_path = PATH + '/leftImg8bit/train/'
+    trainy_path = PATH + '/sky-data/train/'
 
-    return class_names, label_values
+    val_path = PATH + '/leftImg8bit/val/'
+    valy_path = PATH + '/sky-data/val/'
 
+    train_batch = glob(os.path.join(train_path, '*/*.png'))
+
+    trainy_batch = glob(os.path.join(trainy_path, '*/*color.png'))
+    val_batch = glob(os.path.join(val_path, '*/*.png'))
+
+    valy_batch = glob(os.path.join(valy_path, '*/*color.png'))
+
+    X_train = []
+    y_train = []
+    X_val = []
+    y_val = []
+
+    print('Loading X_Train..')
+    for sample in train_batch:
+        img_path = sample
+        x = load_image(img_path)
+        x = cv2.resize(x, dsize=(512, 256))
+        X_train.append(x)
+
+    print('Loading Y_Train..')
+    for sample in trainy_batch:
+        img_path = sample
+        x = load_image(img_path)
+        x = cv2.resize(x, dsize=(512, 256))
+        y_train.append(x)
+
+    print('Loading X_Validation..')
+    for sample in val_batch:
+        img_path = sample
+        x = load_image(img_path)
+        x = cv2.resize(x, dsize=(512, 256))
+        X_val.append(x)
+
+    print('Loading Y_Validation..')
+    for sample in valy_batch:
+        img_path = sample
+        x = load_image(img_path)
+        x = cv2.resize(x, dsize=(512, 256))
+        y_val.append(x)
+
+    return X_train, y_train, X_val, y_val
 
 def one_hot_it(label, label_values):
     """
