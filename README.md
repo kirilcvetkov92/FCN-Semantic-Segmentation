@@ -31,11 +31,7 @@ Once you download pretrained model and dataset, please follow this project struc
     ├── "model.h5"   
     
 ## Support
-**Prediction supports the following file formats : (Video : Mp4, Picture : .png)**
-
-## Requirements for loading pretrained model
-3 <= Python < 3.6 (Please note that python serialization algorithm is changed from v3.6+, and you can't load the pretrained model if you use Python 3.6+)
-
+**Prediction supports the following file formats : (Video : Mp4, Avi, Picture : PNG/JPEG)**
 
 ### Model prediction arguments
 
@@ -53,37 +49,13 @@ optional arguments:
 ### Example semantic Image segmentation : 
 
 ```
-python predict.py -media test_img.png
+python cityscapes_predict.py -media test_img.png
 ```
 
 ### Example semantic Video segmentation :
 ```
-python predict.py -media test_video.mp4
+python cityscapes_predict.py -media test_video.mp4
 ```
-
-
-## Model training arguments:
-
-```
-optional arguments:
-  -eph EPOCHS, --epochs EPOCHS
-                        Number of epochs
-  -lr LEARNING_RATE, --learning_rate LEARNING_RATE
-                        Learning rate
-  -save MODEL_DIR, --model_dir MODEL_DIR
-                        Save checkpoints directory
-  -batches BATCH_SIZE, --batch_size BATCH_SIZE
-                        Number of batches per train
-```                        
-
-### Example training:
-```
-python train.py
-```
-
-
-
-
 
 
 ### Setup
