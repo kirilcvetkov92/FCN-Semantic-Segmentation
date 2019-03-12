@@ -100,4 +100,9 @@ ENV/
 # mypy
 .mypy_cache/
 
-RUNS/
+
+
+#zip
+*.zip
+*.png
+*.json
