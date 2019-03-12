@@ -4,6 +4,11 @@ In this project, you'll label the pixels of a road in images using a Fully Convo
 
 # Image-Segmentation
 
+<p align="center">
+   This is the general view of FCN Neural network architecture: 
+   <img src="examples/fcn.png" width="50%" height="50%">
+</p>
+
 Tensorflow impementation of Fully Convolutional Network (FCN) for  Image Segmentation Model 
 (Paper : [Link](https://arxiv.org/pdf/1411.4038.pdf))
 
