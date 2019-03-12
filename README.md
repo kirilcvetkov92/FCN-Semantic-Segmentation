@@ -21,14 +21,17 @@ Once you download pretrained model and dataset, please follow this project struc
     ├── cityscapes_helper.py  (Helper preprocessing/postprocessing functions for Cityscapes dataset) 
     ├── cityscapes_config.py  (Config file for training FCN on CItyscapes dataset)
     ├── cityscapes_predict.py (Perform image segmentation on custom image/video file)
-    ├── "data"                   
-    |   ├── train
-    |   ├── train_labels
-    |   ├── val
-    |   ├── val_labels
-    |   ├── test
-    |   ├── test_labels
-    ├── "model.h5"   
+    |── "runs"
+    |   ├── kitti_output      (Examples of outputed files from trained model on kitti dataset)
+    |   ├── cityscapes_output (Examples of outputed files from trained model on cityscapes dataset)
+    ├── "data"                (Folder for dataset storage Kitti/Citiscapes)   
+    |   ├── train..
+    |   ├── train_labels...
+    |   ├── val..
+    |   ├── val_labels..
+    |   ├── test..
+    |   ├── test_labels..
+ 
     
 ## Support
 **Prediction supports the following file formats : (Video : Mp4, Avi, Picture : PNG/JPEG)**
