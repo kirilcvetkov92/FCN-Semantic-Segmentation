@@ -32,7 +32,18 @@ Once you download pretrained model and dataset, please follow this project struc
     |   ├── test..
     |   ├── test_labels..
  
-    
+
+## Project Notes 
+* First trained my model on Kitti dataset, achieved some results which were fair enough for passing this project
+* Trained my model on 10 epocchs with 2 classes(road/car) on Citiscapes dataset, I got better results
+* Trained my model on 60 epochs with 29 classes on Citiscapes dataset
+    * Solved problem of vanishing gradient with adding relu activations on all convolution layers
+    * Added data augmentation 
+        * Random shadow pieces 
+        * Random brightness 
+        * Added video/image processing script called `cityscapes_preddict` (see examples below)
+
+
 ## Support
 **Prediction supports the following file formats : (Video : Mp4, Avi, Picture : PNG/JPEG)**
 
