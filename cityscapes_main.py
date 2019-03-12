@@ -187,17 +187,17 @@ def train_nn(sess, epochs, batch_size, get_batches_fn, train_op, cross_entropy_l
 
 def run():
     num_classes = 29
-    image_shape = (160, 576)  # KITTI dataset uses 160x576 images
+    image_shape = (512, 256)  # KITTI dataset uses 160x576 images
     data_dir = 'D:\data\leftImg8bit_trainvaltest'
-    runs_dir = './runs'
+    video_dir = 'D:\data\leftImg8bit_demoVideo\leftImg8bit\demoVideo\stuttgart_01'
+    runs_dir = 'D:\data\\runs'
     #tests.test_for_kitti_dataset(data_dir)
     epochs = 30
     batch_size = 25
     is_train = False
     # Download pretrained vgg model
     helper.maybe_download_pretrained_vgg(data_dir)
-    X_train, y_train, X_val, y_val = cityscapes_helper.get_data(data_dir)
-
+    label_values = cityscapes_helper.get_label_info()
     # You'll need a GPU with at least 10 teraFLOPS to train on.
     #  https://www.cityscapes-dataset.com/
 
@@ -215,15 +215,18 @@ def run():
         correct_label = tf.placeholder(dtype=tf.float32, shape=(None, None, None, num_classes))
         learning_rate = tf.placeholder(dtype=tf.float32)
         logits, train_op, cross_entropy_loss = optimize(output, correct_label, learning_rate, num_classes)
+        logits = tf.nn.softmax(logits, name='softmax')
         sess.run(tf.global_variables_initializer())
-
         saver = tf.train.Saver()  # Simple model saver
 
         if not is_train:
+          #  img = cityscapes_helper.load_image('D:\\data\\leftImg8bit_trainvaltest\\leftImg8bit\\test\\berlin\\berlin_000000_000019_leftImg8bit.png')
+          ##  cityscapes_helper.pipeline_final(img, sess, logits, keep_prob, input, image_shape, label_values)
             print('inference')
             saver.restore(sess, tf.train.latest_checkpoint('.'))
-            cityscapes_helper.save_inference_samples(runs_dir, data_dir, sess, image_shape, logits, keep_prob, input)
+            cityscapes_helper.save_inference_samples(runs_dir, video_dir, sess, image_shape, logits, keep_prob, input, label_values)
         else:
+            X_train, y_train, X_val, y_val = cityscapes_helper.get_data(data_dir)
             train_nn(sess, epochs, batch_size, get_batches_fn, train_op, cross_entropy_loss, input, correct_label,
                          keep_prob, learning_rate, X_train, y_train, label_values, X_val, y_val)
 

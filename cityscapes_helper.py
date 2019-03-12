@@ -310,20 +310,16 @@ def gen_batch_function(samplesX, samplesY, label_values, batch_size=1, is_train=
         y_f = np.float32(y_f)
         yield X_f, y_f
 
-def pipeline_final(img, sess, logits, keep_prob, input_image, image_shape, num_classes=29):
-    channel = 1 if is_video else 4
-    size = img.shape
+def pipeline_final(img, sess, logits, keep_prob, input_image, image_shape, label_values, num_classes=29):
+    channel = 1
     img= cv2.resize(img, dsize=image_shape)
     img = np.array([img])
-    softmax = tf.nn.softmax(logits, name='softmax')
-    softmax_ = loss = sess.run([softmax],
+    softmax_ = loss = sess.run([logits],
                        feed_dict={input_image: img, keep_prob:1})
     logits_ = (softmax_[0].reshape(1,image_shape[1],image_shape[0],num_classes))
     output_image = reverse_one_hot(logits_[0])
 
-    print(output_image.shape)
-
-    out_vis_image = colour_code_segmentation(output_image, c_values)
+    out_vis_image = colour_code_segmentation(output_image, label_values)
 
     a = cv2.cvtColor(np.uint8(out_vis_image), channel)
 
@@ -335,20 +331,20 @@ def pipeline_final(img, sess, logits, keep_prob, input_image, image_shape, num_c
     return added_image
 
 
-def process(media_dir, sess, logits, keep_prob, input_image, image_shape):
+def process(media_dir, sess, logits, keep_prob, input_image, image_shape, label_values):
     img = load_image(media_dir)
-    img = pipeline_final(img, sess, logits, keep_prob, input_image, image_shape)
+    img = pipeline_final(img, sess, logits, keep_prob, input_image, image_shape, label_values)
     return img
 
 
-def gen_test_output(sess, logits, keep_prob, input_image, data_folder, image_shape):
+def gen_test_output(sess, logits, keep_prob, input_image, data_folder, image_shape, label_values):
 
-    for image_file in glob(os.path.join(data_folder, 'test', '*.png')):
-        image = process(image_file, sess, logits, keep_prob, input_image, image_shape)
+    for image_file in glob(os.path.join(data_folder, '*.png')):
+        image = process(image_file, sess, logits, keep_prob, input_image, image_shape, label_values)
         yield os.path.basename(image_file), image
 
 
-def save_inference_samples(runs_dir, data_dir, sess, image_shape, logits, keep_prob, input_image):
+def save_inference_samples(runs_dir, data_dir, sess, image_shape, logits, keep_prob, input_image, label_values):
 	"""
 	Save test images with semantic masks of lane predictions to runs_dir.
 	:param runs_dir: Directory to save output images
@@ -368,6 +364,7 @@ def save_inference_samples(runs_dir, data_dir, sess, image_shape, logits, keep_p
 	# Run NN on test images and save them to HD
 	print('Training Finished. Saving test images to: {}'.format(output_dir))
 	image_outputs = gen_test_output(
-		sess, logits, keep_prob, input_image, os.path.join(data_dir, '/leftImg8bit/'), image_shape)
+
+		sess, logits, keep_prob, input_image, data_dir, image_shape, label_values)
 	for name, image in image_outputs:
 		scipy.misc.imsave(os.path.join(output_dir, name), image)
