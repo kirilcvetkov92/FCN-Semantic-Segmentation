@@ -87,6 +87,12 @@ You may also need [Python Image Library (PIL)](https://pillow.readthedocs.io/) f
 ##### Dataset
 Download the [Kitti Road dataset](http://www.cvlibs.net/datasets/kitti/eval_road.php) from [here](http://www.cvlibs.net/download.php?file=data_road.zip).  Extract the dataset in the `data` folder.  This will create the folder `data_road` with all the training a test images.
 
+Download the [Cityscapes dataset](https://www.cityscapes-dataset.com/downloads/) from [here](https://www.cityscapes-dataset.com/downloads/). 
+* Download gtFine_trainvaltest.zip (Annotated data)
+* Extract the train/val/test datasets in the `data/leftImg8bit_trainvaltest/sky-data` folder. 
+* Download leftImg8bit_trainvaltest.zip (Image data)
+* Extract the train/val/test datasets in the `data/leftImg8bit_trainvaltest/leftImg8bit` folder. 
+
 ### Start
 ##### Implement
 Implement the code in the `main.py` module indicated by the "TODO" comments.
