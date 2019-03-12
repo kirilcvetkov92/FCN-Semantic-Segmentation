@@ -10,3 +10,6 @@ STDEV = 1e-3
 DATA_DIR = 'D:\data\leftImg8bit_trainvaltest'
 VIDEO_DIR = 'D:\data\leftImg8bit_demoVideo\leftImg8bit\demoVideo\stuttgart_02'
 RUNS_DIR = 'D:\data\\runs'
+
+DEFAULT_SAVE_DIR = ''
+PRETRAINED_MODEL_DIR = ''

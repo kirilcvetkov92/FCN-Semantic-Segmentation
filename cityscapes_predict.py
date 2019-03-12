@@ -76,9 +76,7 @@ def process(media_dir, save_dir, model_dir):
     input, keep_prob, layer3, layer4, layer7 = load_vgg(sess, vgg_path)
     print(input)
     output = layers(layer3, layer4, layer7, num_classes)
-    correct_label = tf.placeholder(dtype=tf.float32, shape=(None, None, None, num_classes))
-    learning_rate = tf.placeholder(dtype=tf.float32)
-    logits, train_op, cross_entropy_loss = optimize(output, correct_label, learning_rate, num_classes)
+
     tf.set_random_seed(123)
     sess.run(tf.global_variables_initializer())
 

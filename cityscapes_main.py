@@ -64,7 +64,7 @@ def layers(vgg_layer3_out, vgg_layer4_out, vgg_layer7_out, num_classes):
                                        kernel_regularizer=tf.contrib.layers.l2_regularizer(L2_REG), name='conv_1_1_1',activation = tf.nn.relu)
 
 
-    conv1 = tf.layers.conv2d_transpose(layer7_conv_1x1, num_classes, 4, 2,
+    conv1 = tf.layers.conv2d_transpose(l7_conv, num_classes, 4, 2,
                                         padding='same', kernel_initializer= tf.random_normal_initializer(stddev=STDEV),
                                         kernel_regularizer=tf.contrib.layers.l2_regularizer(L2_REG), name='conv_1_1_2',activation = tf.nn.relu)
 
@@ -204,6 +204,8 @@ def run():
                          keep_prob, learning_rate, X_train, y_train, label_values, X_val, y_val)
             cityscapes_helper.save_inference_samples(runs_dir, video_dir, sess, image_shape, logits, keep_prob, input,
                                                      label_values)
+
+            print('saving model')
             saver.save(sess, './model')
 
 if __name__ == '__main__':
