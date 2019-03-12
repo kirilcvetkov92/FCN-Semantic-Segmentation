@@ -56,33 +56,32 @@ def layers(vgg_layer3_out, vgg_layer4_out, vgg_layer7_out, num_classes):
     :return: The Tensor for the last layer of output
     """
     # TODO: Implement function
-    layer7_conv_1x1 = tf.layers.conv2d(vgg_layer7_out, num_classes, 1, 1,
+    l7_conv = tf.layers.conv2d(vgg_layer7_out, num_classes, 1, 1,
                                        padding='same',  kernel_initializer= tf.random_normal_initializer(stddev=0.01),
 
                                        kernel_regularizer=tf.contrib.layers.l2_regularizer(1e-3))
-    output = tf.layers.conv2d_transpose(layer7_conv_1x1, num_classes, 4, 2,
+    conv1 = tf.layers.conv2d_transpose(l7_conv, num_classes, 4, 2,
                                         padding='same', kernel_initializer= tf.random_normal_initializer(stddev=0.01),
                                         kernel_regularizer=tf.contrib.layers.l2_regularizer(1e-3))
-    layer4_conv_1x1 = tf.layers.conv2d(vgg_layer4_out, num_classes, 1, 1,
+    l4_conv = tf.layers.conv2d(vgg_layer4_out, num_classes, 1, 1,
                                        padding='same', kernel_initializer= tf.random_normal_initializer(stddev=0.01),
                                        kernel_regularizer=tf.contrib.layers.l2_regularizer(1e-3))
-    output = tf.add(output, layer4_conv_1x1)
+    skip1 = tf.add(conv1, l4_conv)
     #output = keras.layers.UpSampling2D(size=(2,2),     data_format=None,interpolation='bilinear')(output)
 
 
-    output = tf.layers.conv2d_transpose(output, num_classes, 4, 2,
+    conv2 = tf.layers.conv2d_transpose(skip1, num_classes, 4, 2,
                                        padding='same', kernel_initializer= tf.random_normal_initializer(stddev=0.01),
                                         kernel_regularizer=tf.contrib.layers.l2_regularizer(1e-3))
-    layer3_conv_1x1 = tf.layers.conv2d(vgg_layer3_out, num_classes, 1, 1,
+    l3_conv = tf.layers.conv2d(vgg_layer3_out, num_classes, 1, 1,
                                        padding='same', kernel_initializer= tf.random_normal_initializer(stddev=0.01),
                                        kernel_regularizer=tf.contrib.layers.l2_regularizer(1e-3))
-    output = tf.add(output, layer3_conv_1x1)
-    output = tf.layers.conv2d_transpose(output, num_classes, 16, 8,
+    skip_3 = tf.add(conv2, l3_conv)
+    output = tf.layers.conv2d_transpose(skip_3, num_classes, 16, 8,
                                         padding='same', kernel_initializer= tf.random_normal_initializer(stddev=0.01),
                                         kernel_regularizer=tf.contrib.layers.l2_regularizer(1e-3))
     return output
 tests.test_layers(layers)
-
 
 def optimize(nn_last_layer, correct_label, learning_rate, num_classes):
     """
@@ -138,7 +137,7 @@ def run():
     data_dir = './data'
     runs_dir = './runs'
     tests.test_for_kitti_dataset(data_dir)
-    epochs = 100
+    epochs = 3
     batch_size = 10
     # Download pretrained vgg model
     helper.maybe_download_pretrained_vgg(data_dir)
@@ -154,11 +153,12 @@ def run():
         get_batches_fn = helper.gen_batch_function(os.path.join(data_dir, 'data_road/training'), image_shape)
 
         input, keep_prob, layer3, layer4, layer7 = load_vgg(sess, vgg_path)
-        output = layers(layer3, layer4, layer7, 2)
-        correct_label = tf.placeholder(dtype=tf.float32, shape=(None, None, None, 2))
+
+        output = layers(layer3, layer4, layer7, num_classes)
+
+        correct_label = tf.placeholder(dtype=tf.float32, shape=(None, None, None, num_classes))
         learning_rate = tf.placeholder(dtype=tf.float32)
-        logits, train_op, cross_entropy_loss = optimize(output, correct_label, learning_rate, 2)
-        tf.set_random_seed(123)
+        logits, train_op, cross_entropy_loss = optimize(output, correct_label, learning_rate, num_classes)
         sess.run(tf.global_variables_initializer())
         saver = tf.train.Saver()  # Simple model saver
 
@@ -166,6 +166,7 @@ def run():
         train_nn(sess, epochs, batch_size, get_batches_fn, train_op, cross_entropy_loss, input, correct_label,
                  keep_prob, learning_rate)
         # Save inference data using helper.save_inference_samples
+        saver.save(sess, './model')
         helper.save_inference_samples(runs_dir, data_dir, sess, image_shape, logits, keep_prob, input)
         # OPTIONAL: Augment Images for better results
         #  https://datascience.stackexchange.com/questions/5224/how-to-prepare-augment-images-for-neural-network

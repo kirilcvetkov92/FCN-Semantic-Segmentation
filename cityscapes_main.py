@@ -59,32 +59,32 @@ def layers(vgg_layer3_out, vgg_layer4_out, vgg_layer7_out, num_classes):
     :return: The Tensor for the last layer of output
     """
     # TODO: Implement function
-    layer7_conv_1x1 = tf.layers.conv2d(vgg_layer7_out, num_classes, 1, 1,
+    l7_conv = tf.layers.conv2d(vgg_layer7_out, num_classes, 1, 1,
                                        padding='same', kernel_initializer= tf.random_normal_initializer(stddev=STDEV),
                                        kernel_regularizer=tf.contrib.layers.l2_regularizer(L2_REG), name='conv_1_1_1',activation = tf.nn.relu)
 
 
-    output = tf.layers.conv2d_transpose(layer7_conv_1x1, num_classes, 4, 2,
+    conv1 = tf.layers.conv2d_transpose(layer7_conv_1x1, num_classes, 4, 2,
                                         padding='same', kernel_initializer= tf.random_normal_initializer(stddev=STDEV),
                                         kernel_regularizer=tf.contrib.layers.l2_regularizer(L2_REG), name='conv_1_1_2',activation = tf.nn.relu)
 
-    layer4_conv_1x1 = tf.layers.conv2d(vgg_layer4_out, num_classes, 1, 1,
+    l4_conv = tf.layers.conv2d(vgg_layer4_out, num_classes, 1, 1,
                                        padding='same', kernel_initializer= tf.random_normal_initializer(stddev=STDEV),
                                        kernel_regularizer=tf.contrib.layers.l2_regularizer(L2_REG), name='conv_1_1_3',activation = tf.nn.relu)
 
-    output = tf.add(output, layer4_conv_1x1, name='conv_1_1_4')
+    skip_1 = tf.add(conv1, l4_conv, name='conv_1_1_4')
     #output = tf.layers.batch_normalization(output)
     #output = keras.layers.UpSampling2D(size=(2,2),data_format=None,interpolation='bilinear')(output)
 
-    output = tf.layers.conv2d_transpose(output, num_classes, 4, 2,
+    conv2 = tf.layers.conv2d_transpose(skip_1, num_classes, 4, 2,
                                        padding='same', kernel_initializer= tf.random_normal_initializer(stddev=STDEV),
                                         kernel_regularizer=tf.contrib.layers.l2_regularizer(L2_REG),  name='conv_1_1_5',activation = tf.nn.relu)
-    layer3_conv_1x1 = tf.layers.conv2d(vgg_layer3_out, num_classes, 1, 1,
+    l3_conv = tf.layers.conv2d(vgg_layer3_out, num_classes, 1, 1,
                                        padding='same', kernel_initializer= tf.random_normal_initializer(stddev=STDEV),
                                        kernel_regularizer=tf.contrib.layers.l2_regularizer(L2_REG), name='conv_1_1_6',activation = tf.nn.relu)
-    output = tf.add(output, layer3_conv_1x1,  name='conv_1_1_7')
+    skip_3 = tf.add(conv2, l3_conv,  name='conv_1_1_7')
 
-    output = tf.layers.conv2d_transpose(output, num_classes, 16, 8,
+    output = tf.layers.conv2d_transpose(skip_3, num_classes, 16, 8,
                                         padding='same', kernel_initializer= tf.random_normal_initializer(stddev=STDEV),
                                         kernel_regularizer=tf.contrib.layers.l2_regularizer(L2_REG),  name='conv_1_1_8',activation = tf.nn.relu)
 
@@ -204,6 +204,7 @@ def run():
                          keep_prob, learning_rate, X_train, y_train, label_values, X_val, y_val)
             cityscapes_helper.save_inference_samples(runs_dir, video_dir, sess, image_shape, logits, keep_prob, input,
                                                      label_values)
+            saver.save(sess, './model')
 
 if __name__ == '__main__':
     run()
