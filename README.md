@@ -5,8 +5,7 @@ In this project, you'll label the pixels of a road in images using a Fully Convo
 # Image-Segmentation
 
 <p align="center">
-   This is the general view of FCN Neural network architecture:  
-   
+   This is the general view of FCN Neural network architecture:  <br/>
    <img src="examples/fcn.png" width="50%" height="50%">
 </p>
 
