@@ -6,11 +6,8 @@ import warnings
 from distutils.version import LooseVersion
 import project_tests as tests
 import cityscapes_helper
+from cityscapes_config import *
 
-KEEP_PROB = 0.5
-LEARNING_RATE = 0.0005
-L2_REG = 1e-6
-STDEV = 1e-3
 
 # Check TensorFlow Version
 assert LooseVersion(tf.__version__) >= LooseVersion('1.0'), 'Please use TensorFlow version 1.0 or newer.  You are using {}'.format(tf.__version__)
@@ -66,23 +63,18 @@ def layers(vgg_layer3_out, vgg_layer4_out, vgg_layer7_out, num_classes):
                                        padding='same', kernel_initializer= tf.random_normal_initializer(stddev=STDEV),
                                        kernel_regularizer=tf.contrib.layers.l2_regularizer(L2_REG), name='conv_1_1_1',activation = tf.nn.relu)
 
-   # layer7_conv_1x1 = tf.layers.batch_normalization(layer7_conv_1x1)
 
     output = tf.layers.conv2d_transpose(layer7_conv_1x1, num_classes, 4, 2,
                                         padding='same', kernel_initializer= tf.random_normal_initializer(stddev=STDEV),
                                         kernel_regularizer=tf.contrib.layers.l2_regularizer(L2_REG), name='conv_1_1_2',activation = tf.nn.relu)
-    #output = keras.layers.UpSampling2D(size=(2,2),data_format=None,interpolation='bilinear')(layer7_conv_1x1)
 
     layer4_conv_1x1 = tf.layers.conv2d(vgg_layer4_out, num_classes, 1, 1,
                                        padding='same', kernel_initializer= tf.random_normal_initializer(stddev=STDEV),
                                        kernel_regularizer=tf.contrib.layers.l2_regularizer(L2_REG), name='conv_1_1_3',activation = tf.nn.relu)
-    #layer4_conv_1x1 = tf.layers.batch_normalization(layer4_conv_1x1)
 
     output = tf.add(output, layer4_conv_1x1, name='conv_1_1_4')
     #output = tf.layers.batch_normalization(output)
-
     #output = keras.layers.UpSampling2D(size=(2,2),data_format=None,interpolation='bilinear')(output)
-
 
     output = tf.layers.conv2d_transpose(output, num_classes, 4, 2,
                                        padding='same', kernel_initializer= tf.random_normal_initializer(stddev=STDEV),
@@ -91,9 +83,7 @@ def layers(vgg_layer3_out, vgg_layer4_out, vgg_layer7_out, num_classes):
                                        padding='same', kernel_initializer= tf.random_normal_initializer(stddev=STDEV),
                                        kernel_regularizer=tf.contrib.layers.l2_regularizer(L2_REG), name='conv_1_1_6',activation = tf.nn.relu)
     output = tf.add(output, layer3_conv_1x1,  name='conv_1_1_7')
-   # output = tf.layers.batch_normalization(output)
 
-    #output = keras.layers.UpSampling2D(size=(8,8),data_format=None,interpolation='bilinear')(output)
     output = tf.layers.conv2d_transpose(output, num_classes, 16, 8,
                                         padding='same', kernel_initializer= tf.random_normal_initializer(stddev=STDEV),
                                         kernel_regularizer=tf.contrib.layers.l2_regularizer(L2_REG),  name='conv_1_1_8',activation = tf.nn.relu)
@@ -118,18 +108,8 @@ def optimize(nn_last_layer, correct_label, learning_rate, num_classes):
     logits = tf.reshape(nn_last_layer, (-1, num_classes), name='logits')
     labels = tf.reshape(correct_label, (-1, num_classes), name='labels')
     cross_entropy_loss = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(logits=logits, labels=labels))
-    softmax = tf.nn.softmax(logits, name='softmax')
 
-    # global_step = tf.Variable(0, trainable=False)
-
-    #     train_op = tf.train.AdamOptimizer(learning_rate=
-    #                                       cyclic_learning_rate(global_step=global_step,
-    #                                                                mode='triangular2')).minimize(cross_entropy_loss,global_step=global_step)
     train_op = tf.train.AdamOptimizer(learning_rate=0.0005).minimize(cross_entropy_loss)
-
-    #     gradients = optimizer.compute_gradients(cross_entropy_loss)
-    #     capped_gvs = [(tf.clip_by_value(grad, -.5, .5), var) for grad, var in gradients]
-    #     train_op = optimizer.apply_gradients(capped_gvs)
 
     return logits, train_op, cross_entropy_loss
 
@@ -153,23 +133,18 @@ def train_nn(sess, epochs, batch_size, get_batches_fn, train_op, cross_entropy_l
     :param keep_prob: TF Placeholder for dropout keep probability
     :param learning_rate: TF Placeholder for learning rate
     """
-    image_shape = (160, 576)  # KITTI dataset uses 160x576 images
-    data_dir = './data'
-    runs_dir = './runs'
 
-    mean_loss = []
     for epoch in range(epochs):
         print('epoch : ', epoch)
         for image, targets in get_batches_fn(X_train, y_train, label_values, batch_size):
             _, loss = sess.run([train_op, cross_entropy_loss],
                                feed_dict={input_image: image, correct_label: targets, keep_prob: KEEP_PROB,
                                           learning_rate: LEARNING_RATE})
-        #         assign_op = global_step.assign(epoch)
-        #         sess.run(assign_op)
         # Print data on the learning process
 
-        print("Epoch: {}".format(epoch + 1), "/ {}".format(epochs), " Loss: {:.3f}".format(loss))
+            print("Epoch: {}".format(epoch + 1), "/ {}".format(epochs), " Loss: {:.3f}".format(loss))
 
+        mean_loss = []
         for image, targets in get_batches_fn(X_val, y_val, label_values, batch_size, is_train=False):
             loss = sess.run([cross_entropy_loss],
                             feed_dict={input_image: image, correct_label: targets, keep_prob: 1})
@@ -186,18 +161,19 @@ def train_nn(sess, epochs, batch_size, get_batches_fn, train_op, cross_entropy_l
 
 
 def run():
-    num_classes = 29
-    image_shape = (512, 256)  # KITTI dataset uses 160x576 images
-    data_dir = 'D:\data\leftImg8bit_trainvaltest'
-    video_dir = 'D:\data\leftImg8bit_demoVideo\leftImg8bit\demoVideo\stuttgart_01'
-    runs_dir = 'D:\data\\runs'
-    #tests.test_for_kitti_dataset(data_dir)
-    epochs = 30
-    batch_size = 25
-    is_train = False
+    num_classes = NUM_CLASSES
+    image_shape = (512, 256)  # Cityscapes dataset should be scaled (Using GTX-1080TI)
+    data_dir = DATA_DIR
+    video_dir = VIDEO_DIR
+    runs_dir = RUNS_DIR
+
+    epochs = EPOCHS
+    batch_size = BATCH_SIZE
+    is_train = IS_TRAIN
     # Download pretrained vgg model
     helper.maybe_download_pretrained_vgg(data_dir)
     label_values = cityscapes_helper.get_label_info()
+
     # You'll need a GPU with at least 10 teraFLOPS to train on.
     #  https://www.cityscapes-dataset.com/
 
@@ -220,16 +196,14 @@ def run():
         saver = tf.train.Saver()  # Simple model saver
 
         if not is_train:
-          #  img = cityscapes_helper.load_image('D:\\data\\leftImg8bit_trainvaltest\\leftImg8bit\\test\\berlin\\berlin_000000_000019_leftImg8bit.png')
-          ##  cityscapes_helper.pipeline_final(img, sess, logits, keep_prob, input, image_shape, label_values)
-            print('inference')
             saver.restore(sess, tf.train.latest_checkpoint('.'))
             cityscapes_helper.save_inference_samples(runs_dir, video_dir, sess, image_shape, logits, keep_prob, input, label_values)
         else:
             X_train, y_train, X_val, y_val = cityscapes_helper.get_data(data_dir)
             train_nn(sess, epochs, batch_size, get_batches_fn, train_op, cross_entropy_loss, input, correct_label,
                          keep_prob, learning_rate, X_train, y_train, label_values, X_val, y_val)
-
+            cityscapes_helper.save_inference_samples(runs_dir, video_dir, sess, image_shape, logits, keep_prob, input,
+                                                     label_values)
 
 if __name__ == '__main__':
     run()

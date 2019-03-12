@@ -362,7 +362,7 @@ def save_inference_samples(runs_dir, data_dir, sess, image_shape, logits, keep_p
 	os.makedirs(output_dir)
 
 	# Run NN on test images and save them to HD
-	print('Training Finished. Saving test images to: {}'.format(output_dir))
+	print('Saving test images to: {}'.format(output_dir))
 	image_outputs = gen_test_output(
 
 		sess, logits, keep_prob, input_image, data_dir, image_shape, label_values)
