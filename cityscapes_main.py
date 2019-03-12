@@ -205,8 +205,6 @@ def run():
             cityscapes_helper.save_inference_samples(runs_dir, video_dir, sess, image_shape, logits, keep_prob, input,
                                                      label_values)
 
-            print('saving model')
-            saver.save(sess, './model')
 
 if __name__ == '__main__':
     run()
