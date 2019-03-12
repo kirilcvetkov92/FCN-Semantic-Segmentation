@@ -103,13 +103,12 @@ def get_label_info():
 
     return label_values
 
-def get_data():
-    PATH = 'D:/data/leftImg8bit_trainvaltest/'
-    train_path = PATH + '/leftImg8bit/train/'
-    trainy_path = PATH + '/sky-data/train/'
+def get_data(data_path):
+    train_path = data_path + '/leftImg8bit/train/'
+    trainy_path = data_path + '/sky-data/train/'
 
-    val_path = PATH + '/leftImg8bit/val/'
-    valy_path = PATH + '/sky-data/val/'
+    val_path = data_path + '/leftImg8bit/val/'
+    valy_path = data_path + '/sky-data/val/'
 
     train_batch = glob(os.path.join(train_path, '*/*.png'))
 
@@ -319,7 +318,7 @@ def pipeline_final(img, sess, logits, keep_prob, input_image, image_shape, num_c
     softmax = tf.nn.softmax(logits, name='softmax')
     softmax_ = loss = sess.run([softmax],
                        feed_dict={input_image: img, keep_prob:1})
-    logits_ = (softmax_[0].reshape(1,image_shape[1],image_shape[0],num_classes)) #reshape(256,512) = rezie(512,256) ! fuck :S
+    logits_ = (softmax_[0].reshape(1,image_shape[1],image_shape[0],num_classes))
     output_image = reverse_one_hot(logits_[0])
 
     print(output_image.shape)
@@ -335,12 +334,10 @@ def pipeline_final(img, sess, logits, keep_prob, input_image, image_shape, num_c
 
     return added_image
 
-def pipeline_img(img, sess, logits):
-    return pipeline_final(img,  sess, logits, keep_prob, input_image, image_shape)
 
-def process(media_dir, sess,image_shape =(512,256), model_dir=''):
+def process(media_dir, sess, logits, keep_prob, input_image, image_shape):
     img = load_image(media_dir)
-    img = pipeline_img(img, sess, logits, keep_prob)
+    img = pipeline_final(img, sess, logits, keep_prob, input_image, image_shape)
     return img
 
 
