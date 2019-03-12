@@ -8,6 +8,7 @@ import os
 from glob import glob
 from sklearn.utils import shuffle
 import random
+import time
 
 def get_label_info():
     """
@@ -153,62 +154,28 @@ def get_data():
     return X_train, y_train, X_val, y_val
 
 def one_hot_it(label, label_values):
-    """
-    Convert a segmentation image label array to one-hot format
-    by replacing each pixel value with a vector of length num_classes
-    # Arguments
-        label: The 2D array segmentation image label
-        label_values
-
-    # Returns
-        A 2D array with the same width and hieght as the input, but
-        with a depth size of num_classes
-    """
-
-    semantic_map = []
+    semantic_encoding = []
     # c = np.logical_and(np.not_equal(label, label_values[0]), np.not_equal(label, label_values[1]))
     # mask = np.any(c, axis=-1)
     # semantic_map.append(mask)
-    for colour in label_values:
-        equality = np.equal(label, colour)
+    for color in label_values:
+        equality = np.equal(label, color)
         class_map = np.all(equality, axis=-1)
-        semantic_map.append(class_map)
-    semantic_map = np.stack(semantic_map, axis=-1)
+        semantic_encoding.append(class_map)
+    semantic_map = np.stack(semantic_encoding, axis=-1)
 
     return semantic_map
 
 
 def reverse_one_hot(image):
-    """
-    Transform a 2D array in one-hot format (depth is num_classes),
-    to a 2D array with only 1 channel, where each pixel value is
-    the classified class key.
-    # Arguments
-        image: The one-hot format image
-
-    # Returns
-        A 2D array with the same width and hieght as the input, but
-        with a depth size of 1, where each pixel value is the classified
-        class key.
-    """
-
     x = np.argmax(image, axis=-1)
     return x
 
 
 def colour_code_segmentation(image, label_values):
-    """
-    Given a 1-channel array of class keys, colour code the segmentation results.
-    # Arguments
-        image: single channel array where each value represents the class key.
-        label_values
 
-    # Returns
-        Colour coded image for segmentation visualization
-    """
-
-    colour_codes = np.array(label_values)
-    x = colour_codes[image.astype(int)]
+    label_matrix = np.array(label_values)
+    x = label_matrix[image.astype(int)]
 
     return x
 
@@ -268,14 +235,6 @@ def random_shadow(image):
     hls[:, :, 1][cond] = hls[:, :, 1][cond] * s_ratio
     return cv2.cvtColor(hls, cv2.COLOR_HLS2RGB)
 
-def bc_img(img, contrast=1.0, bright=0.0):
-    img = img.astype(np.int)
-    img = img * contrast + bright
-    img[img > 255] = 255
-    img[img < 0] = 0
-    img = img.astype(np.uint8)
-    return img
-
 def random_brightness(image):
     """
     Randomly adjust brightness of the image.
@@ -289,8 +248,6 @@ def random_brightness(image):
     return cv2.cvtColor(hsv_channel, cv2.COLOR_HSV2RGB)
 
 
-
-
 def rotation(input_image, output_image, degrees):
     angle = random.uniform(-1*degrees, degrees)
     M = cv2.getRotationMatrix2D((input_image.shape[1]//2, input_image.shape[0]//2), angle, 1.0)
@@ -301,12 +258,17 @@ def rotation(input_image, output_image, degrees):
 def brightness(image, bright_0_1):
             factor = 1.0 + random.uniform(-1.0*bright_0_1, bright_0_1)
             table = np.array([((i / 255.0) * factor) * 255 for i in np.arange(0, 256)]).astype(np.uint8)
-            input_image = cv2.LUT(input_image, table)
+            image = cv2.LUT(image, table)
+            return image
+
+
 def data_augmentation(input_image, output_image):
 
-    contrast = random.uniform(0.8, 1)  # Contrast augmentation
-    bright = random.randint(-40, 30)  # Brightness augmentation
-    input_image = bc_img(input_image, contrast, bright)
+    if random.randint(0, 1):
+        input_image = brightness(input_image, 0.5)
+
+    if random.randint(0, 1):
+        input_image = random_shadow(input_image)
 
 
     return input_image, output_image
@@ -348,3 +310,67 @@ def gen_batch_function(samplesX, samplesY, label_values, batch_size=1, is_train=
         X_f = np.float32(X_f)
         y_f = np.float32(y_f)
         yield X_f, y_f
+
+def pipeline_final(img, sess, logits, keep_prob, input_image, image_shape, num_classes=29):
+    channel = 1 if is_video else 4
+    size = img.shape
+    img= cv2.resize(img, dsize=image_shape)
+    img = np.array([img])
+    softmax = tf.nn.softmax(logits, name='softmax')
+    softmax_ = loss = sess.run([softmax],
+                       feed_dict={input_image: img, keep_prob:1})
+    logits_ = (softmax_[0].reshape(1,image_shape[1],image_shape[0],num_classes)) #reshape(256,512) = rezie(512,256) ! fuck :S
+    output_image = reverse_one_hot(logits_[0])
+
+    print(output_image.shape)
+
+    out_vis_image = colour_code_segmentation(output_image, c_values)
+
+    a = cv2.cvtColor(np.uint8(out_vis_image), channel)
+
+    b = cv2.cvtColor(np.uint8(img[0]), channel)
+
+    added_image = cv2.addWeighted(a, 1, b, 1, channel)
+    added_image = cv2.resize(added_image, image_shape)
+
+    return added_image
+
+def pipeline_img(img, sess, logits):
+    return pipeline_final(img,  sess, logits, keep_prob, input_image, image_shape)
+
+def process(media_dir, sess,image_shape =(512,256), model_dir=''):
+    img = load_image(media_dir)
+    img = pipeline_img(img, sess, logits, keep_prob)
+    return img
+
+
+def gen_test_output(sess, logits, keep_prob, input_image, data_folder, image_shape):
+
+    for image_file in glob(os.path.join(data_folder, 'test', '*.png')):
+        image = process(image_file, sess, logits, keep_prob, input_image, image_shape)
+        yield os.path.basename(image_file), image
+
+
+def save_inference_samples(runs_dir, data_dir, sess, image_shape, logits, keep_prob, input_image):
+	"""
+	Save test images with semantic masks of lane predictions to runs_dir.
+	:param runs_dir: Directory to save output images
+	:param data_dir: Path to the directory that contains the datasets
+	:param sess: TF session
+	:param image_shape: Tuple - Shape of image
+	:param logits: TF Tensor for the logits
+	:param keep_prob: TF Placeholder for the dropout keep probability
+	:param input_image: TF Placeholder for the image placeholder
+	"""
+	# Make folder for current run
+	output_dir = os.path.join(runs_dir, str(time.time()))
+	if os.path.exists(output_dir):
+		shutil.rmtree(output_dir)
+	os.makedirs(output_dir)
+
+	# Run NN on test images and save them to HD
+	print('Training Finished. Saving test images to: {}'.format(output_dir))
+	image_outputs = gen_test_output(
+		sess, logits, keep_prob, input_image, os.path.join(data_dir, '/leftImg8bit/'), image_shape)
+	for name, image in image_outputs:
+		scipy.misc.imsave(os.path.join(output_dir, name), image)

@@ -5,7 +5,12 @@ import helper
 import warnings
 from distutils.version import LooseVersion
 import project_tests as tests
+import cityscapes_helper
 
+KEEP_PROB = 0.5
+LEARNING_RATE = 0.0005
+L2_REG = 1e-6
+STDEV = 1e-3
 
 # Check TensorFlow Version
 assert LooseVersion(tf.__version__) >= LooseVersion('1.0'), 'Please use TensorFlow version 1.0 or newer.  You are using {}'.format(tf.__version__)
@@ -177,28 +182,34 @@ def train_nn(sess, epochs, batch_size, get_batches_fn, train_op, cross_entropy_l
         saver.save(sess, './model')
 
 
-tests.test_train_nn(train_nn)
+#tests.test_train_nn(train_nn)
 
 
 def run():
     num_classes = 29
     image_shape = (160, 576)  # KITTI dataset uses 160x576 images
-    data_dir = './data'
+    data_dir = 'D:\data'
     runs_dir = './runs'
-    tests.test_for_kitti_dataset(data_dir)
+    #tests.test_for_kitti_dataset(data_dir)
     epochs = 30
-    batch_size = 16
+    batch_size = 25
+    is_train = False
     # Download pretrained vgg model
     helper.maybe_download_pretrained_vgg(data_dir)
+    X_train, y_train, X_val, y_val = cityscapes_helper.get_data()
 
+    # OPTIONAL: Train and Inference on the cityscapes dataset instead of the Kitti dataset.
+    # You'll need a GPU with at least 10 teraFLOPS to train on.
+    #  https://www.cityscapes-dataset.com/
+
+    # gpu_options = tf.GPUOptions(per_process_gpu_memory_fraction=0.333)
     print('run')
-
     tf.reset_default_graph()
     with tf.Session() as sess:
         # Path to vgg model
         vgg_path = os.path.join(data_dir, 'vgg')
         # Create function to get batches
-        get_batches_fn = gen_batch_function
+        get_batches_fn = cityscapes_helper.gen_batch_function
 
         input, keep_prob, layer3, layer4, layer7 = load_vgg(sess, vgg_path)
         print(input)
@@ -210,10 +221,13 @@ def run():
 
         saver = tf.train.Saver()  # Simple model saver
 
-        # saver.restore(sess, tf.train.latest_checkpoint('.'))
-
-        train_nn_sky(sess, epochs, batch_size, get_batches_fn, train_op, cross_entropy_loss, input, correct_label,
-                     keep_prob, learning_rate, X_train, y_train, label_values, X_val, y_val)
+        if not is_train:
+            print('inference')
+            saver.restore(sess, tf.train.latest_checkpoint('.'))
+            cityscapes_helper.save_inference_samples(runs_dir, data_dir, sess, image_shape, logits, keep_prob, input)
+        else:
+            train_nn(sess, epochs, batch_size, get_batches_fn, train_op, cross_entropy_loss, input, correct_label,
+                         keep_prob, learning_rate, X_train, y_train, label_values, X_val, y_val)
 
         # Save inference data using helper.save_inference_samples
         # helper.save_inference_samples(runs_dir, data_dir, sess, image_shape, logits, keep_prob, input)
