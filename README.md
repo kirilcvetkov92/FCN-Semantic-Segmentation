@@ -13,14 +13,6 @@ Tensorflow impementation of Fully Convolutional Network (FCN) for  Image Segment
 (Paper : [Link](https://arxiv.org/pdf/1411.4038.pdf))
 
 
-| Kitti Test Output1	|  Kitti Test Output 2   | Kitti Test Output 3|
-|:-----------:|:----------:|:---------:|
-| ![Introduction video](test_img.png)|![Semantic segmentation](output_image.png)|[![Video](https://img.youtube.com/vi/cxAuoHRf1z4/0.jpg)](https://www.youtube.com/watch?v=cxAuoHRf1z4)| 
-
-| CityScape test output1	| CityScape test output2    |CityScape test output3|
-|:-----------:|:----------:|:---------:|
-| ![Introduction video](test_img.png)|![Semantic segmentation](output_image.png)|[![Video](https://img.youtube.com/vi/cxAuoHRf1z4/0.jpg)](https://www.youtube.com/watch?v=cxAuoHRf1z4)| 
-
 | CityScapeVideo 2-classes	|  CityScapeVideo 29-classes  |
 |:-----------:|:----------:|
 |[![Video](https://img.youtube.com/vi/cxAuoHRf1z4/0.jpg)](https://www.youtube.com/watch?v=cxAuoHRf1z4)| [![Video](https://img.youtube.com/vi/cxAuoHRf1z4/0.jpg)](https://www.youtube.com/watch?v=cxAuoHRf1z4)| 
@@ -84,6 +76,15 @@ python cityscapes_predict.py -media test_img.png
 ```
 python cityscapes_predict.py -media test_video.mp4
 ```
+
+## Output examples on test datasets
+| Kitti Test Output1	|  Kitti Test Output 2   | Kitti Test Output 3|
+|:-----------:|:----------:|:---------:|
+| ![Introduction video](test_img.png)|![Semantic segmentation](output_image.png)|[![Video](https://img.youtube.com/vi/cxAuoHRf1z4/0.jpg)](https://www.youtube.com/watch?v=cxAuoHRf1z4)| 
+
+| CityScape test output1	| CityScape test output2    |CityScape test output3|
+|:-----------:|:----------:|:---------:|
+| ![Introduction video](test_img.png)|![Semantic segmentation](output_image.png)|[![Video](https://img.youtube.com/vi/cxAuoHRf1z4/0.jpg)](https://www.youtube.com/watch?v=cxAuoHRf1z4)| 
 
 
 ### Setup
