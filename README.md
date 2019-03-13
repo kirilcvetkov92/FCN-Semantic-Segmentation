@@ -80,11 +80,11 @@ python cityscapes_predict.py -media test_video.mp4
 ## Output examples on test datasets
 | Kitti Test Output1	|  Kitti Test Output 2   | Kitti Test Output 3|
 |:-----------:|:----------:|:---------:|
-| ![Pic1](runs/kitti_output/um_000034.png)|![Pic2(runs/kitti_output/um_000047.png)|[![Pic3](runs/kitti_output/umm_000089.png)| 
+| ![Pic1](runs/kitti_output/um_000034.png)|![Pic2](runs/kitti_output/um_000047.png)|[![Pic3](runs/kitti_output/umm_000089.png)| 
 
 | CityScape test output1	| CityScape test output2    |CityScape test output3|
 |:-----------:|:----------:|:---------:|
-| ![Introduction video](test_img.png)|![Semantic segmentation](output_image.png)|[![Video](https://img.youtube.com/vi/cxAuoHRf1z4/0.jpg)](https://www.youtube.com/watch?v=cxAuoHRf1z4)| 
+| ![Pic1](runs/cityscapes_output/berlin_000048_000019_leftImg8bit.png)|![Pic2](runs/cityscapes_output/berlin_000126_000019_leftImg8bit.png)|[![Pic3](runs/cityscapes_output/berlin_000003_000019_leftImg8bit.png)|
 
 
 ### Setup
