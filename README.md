@@ -15,7 +15,7 @@ Tensorflow impementation of Fully Convolutional Network (FCN) for  Image Segment
 
 | CityScapeVideo 2-classes	|  CityScapeVideo 29-classes  |
 |:-----------:|:----------:|
-|[![Video](https://img.youtube.com/vi/cxAuoHRf1z4/0.jpg)](https://www.youtube.com/watch?v=cxAuoHRf1z4)| [![Video](https://img.youtube.com/vi/cxAuoHRf1z4/0.jpg)](https://www.youtube.com/watch?v=cxAuoHRf1z4)| 
+|[![Video](https://img.youtube.com/vi/cxAuoHRf1z4/0.jpg)](https://www.youtube.com/watch?v=cxAuoHRf1z4)| [![Video](https://img.youtube.com/vi/xwtslt9JOok/0.jpg)](https://www.youtube.com/watch?v=xwtslt9JOok)| 
 
 ## File hierarchy
 Once you download pretrained model and dataset, please follow this project structure:
