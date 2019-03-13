@@ -30,14 +30,17 @@ Once you download pretrained model and dataset, please follow this project struc
     |── "runs"
     |   ├── kitti_output      (Examples of outputed files from trained model on kitti dataset)
     |   ├── cityscapes_output (Examples of outputed files from trained model on cityscapes dataset)
-    ├── "data"                (Folder for dataset storage Kitti/Citiscapes)   
-    |   ├── train..
-    |   ├── train_labels...
-    |   ├── val..
-    |   ├── val_labels..
-    |   ├── test..
-    |   ├── test_labels..
- 
+    ├── "data"                (Folder for dataset storage Kitti/Citiscapes according to the config)   
+    |   ├── leftImg8bit_trainvaltest
+    |     |      ├── sky-data
+    |     |      |    ├── train       (train  gt labels)
+    |     |      |    ├── val         (validation gt labels)
+    |     |      |    ├── test         (test gt labels)
+    |     |      |    
+    |     |      ├── leftImg8bit
+    |     |      |    ├── train       (train  input images)
+    |     |      |    ├── val         (validation input images)
+    |     |      |    ├── test         (test input images)
 
 ## Project Notes 
 * First trained my model on Kitti dataset, achieved some results which were fair enough for passing this project
