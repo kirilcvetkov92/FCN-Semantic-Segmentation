@@ -46,7 +46,7 @@ Once you download pretrained model and dataset, please follow this project struc
 * First trained my model on Kitti dataset, achieved some results which were fair enough for passing this project
 * Trained my model on 10 epocchs with 2 classes(road/car) on Citiscapes dataset, I got better results
 * Trained my model on 60 epochs with 29 classes on Citiscapes dataset
-    * Solved problem of vanishing gradient with adding relu activations on all convolution layers
+    * Solved problem of exploding gradients with adding relu activations on all convolution layers
     * Added data augmentation 
         * Random shadow pieces 
         * Random brightness 
